@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Pencil } from "lucide-react";
+import { ExternalLink, Pencil } from "lucide-react";
+import { StravaMark } from "@/components/strava-mark";
+import { activityUrl } from "@/lib/strava/api";
 import { DeleteSessionButton } from "@/components/delete-session-button";
 import { LocalTime } from "@/components/local-time";
 import { RatingStars } from "@/components/rating-stars";
@@ -51,6 +53,18 @@ export default async function SessionDetailPage({ params }: { params: Promise<{ 
       <Block title="How was it" text={session.notes} />
       <Block title="What improved" text={session.improvements} accent="text-emerald-600 dark:text-emerald-400" />
       <Block title="Work on next" text={session.next_focus} accent="text-sky-600 dark:text-sky-400" />
+
+      {session.strava_activity_id && (
+        <a
+          href={activityUrl(session.strava_activity_id)}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center justify-between rounded-2xl border border-border bg-card px-4 py-3 text-sm"
+        >
+          <span className="flex items-center gap-2"><StravaMark /> Imported from Strava</span>
+          <span className="flex items-center gap-1 text-muted-foreground">View on Strava <ExternalLink className="h-3.5 w-3.5" /></span>
+        </a>
+      )}
 
       <div className="pt-4">
         <DeleteSessionButton id={session.id} />
@@ -133,5 +147,11 @@ function SportDetails({ session }: { session: SessionRow }) {
     );
   }
   const d = session.details as OtherDetails;
-  return d.activity ? <Card className="p-4"><Row k="Activity" v={d.activity} /></Card> : null;
+  if (!d.activity && !d.distance_km) return null;
+  return (
+    <Card className="space-y-2 p-4">
+      <Row k="Activity" v={d.activity} />
+      <Row k="Distance" v={d.distance_km ? `${d.distance_km} km` : null} />
+    </Card>
+  );
 }

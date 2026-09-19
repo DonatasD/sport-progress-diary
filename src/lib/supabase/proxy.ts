@@ -2,7 +2,8 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { supabaseAnonKey, supabaseUrl } from "./env";
 
-const PUBLIC_PATHS = ["/login", "/auth", "/manifest.webmanifest", "/icon"];
+// /api/strava/webhook is called by Strava's servers, which carry no user session.
+const PUBLIC_PATHS = ["/login", "/auth", "/manifest.webmanifest", "/icon", "/api/strava/webhook"];
 
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({ request });

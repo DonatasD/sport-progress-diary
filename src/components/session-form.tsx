@@ -466,9 +466,24 @@ function SportFields({
   }
 
   return (
-    <section className="rounded-2xl border border-border bg-card p-4">
-      <Label htmlFor="o_activity">Activity</Label>
-      <Input id="o_activity" placeholder="Cycling, swimming, hiking…" value={str("activity")} onChange={(e) => set({ activity: e.target.value || undefined })} />
+    <section className="grid grid-cols-2 gap-3 rounded-2xl border border-border bg-card p-4">
+      <div>
+        <Label htmlFor="o_activity">Activity</Label>
+        <Input id="o_activity" placeholder="Cycling, swimming, hiking…" value={str("activity")} onChange={(e) => set({ activity: e.target.value || undefined })} />
+      </div>
+      <div>
+        <Label htmlFor="o_dist">Distance (km)</Label>
+        <Input
+          id="o_dist"
+          type="number"
+          inputMode="decimal"
+          step="0.01"
+          min={0}
+          placeholder="optional"
+          value={(details.distance_km as number | undefined) ?? ""}
+          onChange={(e) => set({ distance_km: num(e.target.value) })}
+        />
+      </div>
     </section>
   );
 }

@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { format } from "date-fns";
 import { Pencil } from "lucide-react";
 import { DeleteSessionButton } from "@/components/delete-session-button";
+import { LocalTime } from "@/components/local-time";
 import { RatingStars } from "@/components/rating-stars";
 import { SportBadge } from "@/components/sport-badge";
 import { Card } from "@/components/ui/card";
@@ -10,10 +10,11 @@ import { buttonVariants } from "@/components/ui/button";
 import { getSession } from "@/lib/queries";
 import type { GymDetails, OtherDetails, PadelDetails, RunningDetails, SessionRow } from "@/lib/types";
 import { formatDuration, formatPace } from "@/lib/utils";
+import { getViewerTimeZone } from "@/lib/viewer-tz";
 
 export default async function SessionDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const session = await getSession(id);
+  const [session, tz] = await Promise.all([getSession(id), getViewerTimeZone()]);
   if (!session) notFound();
 
   return (
@@ -22,10 +23,10 @@ export default async function SessionDetailPage({ params }: { params: Promise<{ 
         <div className="space-y-1.5">
           <SportBadge sport={session.sport} />
           <h1 className="text-xl font-semibold leading-tight">
-            {session.title ?? `${format(new Date(session.performed_at), "EEEE")} session`}
+            {session.title ?? <><LocalTime iso={session.performed_at} tz={tz} mode="weekday" /> session</>}
           </h1>
           <p className="text-sm text-muted-foreground">
-            {format(new Date(session.performed_at), "EEE d MMM yyyy · HH:mm")}
+            <LocalTime iso={session.performed_at} tz={tz} mode="full" />
             {session.duration_min ? ` · ${formatDuration(session.duration_min)}` : ""}
           </p>
         </div>

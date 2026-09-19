@@ -22,14 +22,6 @@ export function formatPace(distanceKm?: number | null, durationMin?: number | nu
   return `${m}:${s.toString().padStart(2, "0")} /km`;
 }
 
-export function startOfWeek(d: Date) {
-  const date = new Date(d);
-  const day = (date.getDay() + 6) % 7; // Monday = 0
-  date.setDate(date.getDate() - day);
-  date.setHours(0, 0, 0, 0);
-  return date;
-}
-
 /** Local datetime string for <input type="datetime-local"> */
 export function toLocalInputValue(d: Date) {
   const pad = (n: number) => n.toString().padStart(2, "0");

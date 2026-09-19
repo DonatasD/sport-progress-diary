@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { EmptyState } from "@/components/empty-state";
 import { SessionCard } from "@/components/session-card";
+import { getViewerTimeZone } from "@/lib/viewer-tz";
 import { SPORT_META } from "@/lib/sports";
 import { listSessions } from "@/lib/queries";
 import { SPORTS, type Sport } from "@/lib/types";
@@ -15,7 +16,7 @@ export default async function SessionsPage({
 }) {
   const { sport: raw } = await searchParams;
   const sport = SPORTS.includes(raw as Sport) ? (raw as Sport) : undefined;
-  const sessions = await listSessions({ sport });
+  const [sessions, tz] = await Promise.all([listSessions({ sport }), getViewerTimeZone()]);
 
   return (
     <div className="space-y-4">
@@ -34,7 +35,7 @@ export default async function SessionsPage({
         <EmptyState sport={sport} />
       ) : (
         <div className="space-y-3">
-          {sessions.map((s) => <SessionCard key={s.id} session={s} />)}
+          {sessions.map((s) => <SessionCard key={s.id} session={s} tz={tz} />)}
         </div>
       )}
     </div>

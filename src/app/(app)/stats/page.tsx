@@ -1,20 +1,23 @@
-import { subWeeks } from "date-fns";
 import { Card } from "@/components/ui/card";
 import { SPORT_META } from "@/lib/sports";
 import { listSessions } from "@/lib/queries";
 import { SPORTS, type GymDetails, type PadelDetails, type RunningDetails, type SessionRow } from "@/lib/types";
-import { formatDuration, formatPace, startOfWeek } from "@/lib/utils";
+import { formatDuration, formatPace } from "@/lib/utils";
+import { dayMonthLabel, startOfWeekAgo } from "@/lib/tz";
+import { getViewerTimeZone } from "@/lib/viewer-tz";
 
 export const metadata = { title: "Stats" };
 
 const WEEKS = 8;
 
 export default async function StatsPage() {
-  const since = startOfWeek(subWeeks(new Date(), WEEKS - 1));
+  const tz = await getViewerTimeZone();
+  const now = new Date();
+  const since = startOfWeekAgo(now, WEEKS - 1, tz);
   const sessions = await listSessions({ since });
 
   const weeks = Array.from({ length: WEEKS }, (_, i) => {
-    const start = startOfWeek(subWeeks(new Date(), WEEKS - 1 - i));
+    const start = startOfWeekAgo(now, WEEKS - 1 - i, tz);
     const end = new Date(start.getTime() + 7 * 24 * 3600 * 1000);
     const inWeek = sessions.filter((s) => {
       const t = new Date(s.performed_at).getTime();
@@ -42,7 +45,7 @@ export default async function StatsPage() {
                   <div key={sp} className={SPORT_META[sp].bar} style={{ flex: w.bySport[sp] }} title={`${SPORT_META[sp].label}: ${w.bySport[sp]}`} />
                 ))}
               </div>
-              <span className="text-[10px] text-muted-foreground">{w.start.getDate()}/{w.start.getMonth() + 1}</span>
+              <span className="text-[10px] text-muted-foreground">{dayMonthLabel(w.start, tz)}</span>
             </div>
           ))}
         </div>

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { format, isToday, isYesterday } from "date-fns";
+import { LocalTime } from "@/components/local-time";
 import { SportBadge } from "@/components/sport-badge";
 import { RatingStars } from "@/components/rating-stars";
 import type { GymDetails, PadelDetails, RunningDetails, SessionRow } from "@/lib/types";
@@ -29,14 +29,7 @@ export function sessionSummary(s: SessionRow): string[] {
   return parts;
 }
 
-export function formatWhen(iso: string) {
-  const d = new Date(iso);
-  if (isToday(d)) return `Today · ${format(d, "HH:mm")}`;
-  if (isYesterday(d)) return `Yesterday · ${format(d, "HH:mm")}`;
-  return format(d, "EEE d MMM · HH:mm");
-}
-
-export function SessionCard({ session }: { session: SessionRow }) {
+export function SessionCard({ session, tz }: { session: SessionRow; tz: string }) {
   const summary = sessionSummary(session);
   return (
     <Link
@@ -47,7 +40,7 @@ export function SessionCard({ session }: { session: SessionRow }) {
         <div className="min-w-0 space-y-1">
           <div className="flex flex-wrap items-center gap-2">
             <SportBadge sport={session.sport} />
-            <span className="text-xs text-muted-foreground">{formatWhen(session.performed_at)}</span>
+            <LocalTime iso={session.performed_at} tz={tz} className="text-xs text-muted-foreground" />
           </div>
           {session.title && <p className="truncate font-medium">{session.title}</p>}
           {summary.length > 0 && (

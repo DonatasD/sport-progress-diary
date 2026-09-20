@@ -169,6 +169,42 @@ export async function removeActivity(admin: Admin, conn: StravaConnection, activ
   return hasReflection ? ("unlinked" as const) : ("deleted" as const);
 }
 
+/**
+ * Bulk version of upsertActivity for history pages: one query to find which
+ * activities are already linked, one insert for the rest. Existing sessions
+ * are never modified here.
+ */
+async function insertNewActivities(admin: Admin, conn: StravaConnection, activities: StravaActivity[]) {
+  if (activities.length === 0) return { inserted: 0, skipped: 0 };
+
+  const ids = activities.map((a) => a.id);
+  const { data: linked, error: linkedError } = await admin
+    .from("sessions")
+    .select("strava_activity_id")
+    .eq("user_id", conn.user_id)
+    .in("strava_activity_id", ids);
+  if (linkedError) throw new Error(linkedError.message);
+  const existing = new Set((linked ?? []).map((r) => Number(r.strava_activity_id)));
+
+  const rows = activities
+    .filter((a) => !existing.has(a.id))
+    .map((a) => ({ ...activityToSession(a), user_id: conn.user_id }));
+  if (rows.length === 0) return { inserted: 0, skipped: activities.length };
+
+  const { error } = await admin.from("sessions").insert(rows);
+  if (!error) return { inserted: rows.length, skipped: activities.length - rows.length };
+
+  // 23505: a webhook inserted one of these while we were working. Fall back to
+  // one-by-one so the rest of the page still lands.
+  if (error.code !== "23505") throw new Error(error.message);
+  let inserted = 0;
+  for (const a of activities) {
+    if (existing.has(a.id)) continue;
+    if ((await upsertActivity(admin, conn, a)) === "inserted") inserted++;
+  }
+  return { inserted, skipped: activities.length - inserted };
+}
+
 // ---------------------------------------------------------------------------
 // History import
 // ---------------------------------------------------------------------------
@@ -198,15 +234,16 @@ export async function importHistory(
       summary.pages = page;
       summary.fetched += batch.length;
 
-      for (const a of batch) {
+      const wanted = batch.filter((a) => {
         if (opts.includeOther === false && sportFor(a) === "other") {
           summary.ignored++;
-          continue;
+          return false;
         }
-        const outcome = await upsertActivity(admin, conn, a);
-        if (outcome === "inserted") summary.inserted++;
-        else summary.skipped++;
-      }
+        return true;
+      });
+      const { inserted, skipped } = await insertNewActivities(admin, conn, wanted);
+      summary.inserted += inserted;
+      summary.skipped += skipped;
 
       if (batch.length < ACTIVITIES_PER_PAGE) break;
       if (page === MAX_PAGES) summary.truncated = true;

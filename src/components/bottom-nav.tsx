@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BarChart3, Home, List, Plus } from "lucide-react";
+import { BarChart3, Home, List, Plus, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const items = [
   { href: "/", label: "Home", icon: Home },
   { href: "/sessions", label: "Sessions", icon: List },
   { href: "/stats", label: "Stats", icon: BarChart3 },
+  { href: "/settings", label: "Settings", icon: Settings },
 ] as const;
 
 export function BottomNav() {
@@ -30,7 +31,6 @@ export function BottomNav() {
         {items.slice(2).map((item) => (
           <NavItem key={item.href} {...item} active={isActive(pathname, item.href)} />
         ))}
-        <div className="w-14" aria-hidden />
       </div>
     </nav>
   );

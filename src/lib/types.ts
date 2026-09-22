@@ -45,6 +45,7 @@ export type GymExercise = z.infer<typeof gymExerciseSchema>;
 
 export const otherDetailsSchema = z.object({
   activity: z.string().max(80).optional(),
+  distance_km: z.number().positive().max(2000).optional(),
 });
 export type OtherDetails = z.infer<typeof otherDetailsSchema>;
 
@@ -84,6 +85,8 @@ export type SessionRow = {
   improvements: string | null;
   next_focus: string | null;
   details: Record<string, unknown>;
+  source: "manual" | "strava";
+  strava_activity_id: number | null;
   created_at: string;
   updated_at: string;
 };
